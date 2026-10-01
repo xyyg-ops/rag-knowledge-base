@@ -20,12 +20,16 @@
 ```bash
 pip install -r requirements.txt
 
-cp .env.example .env        # 填入 DEEPSEEK_API_KEY 和 ZHIPU_API_KEY
+# 复制配置模板，填入自己的 API Key
+# 向量模型走 SiliconFlow（BAAI/bge-m3），对话模型走 DeepSeek
+cp .env.example .env
 
+python check_key.py                     # 先体检：确认 Key 能用、维度多少
 python main.py index                    # 建索引（默认按标题切分）
 python main.py ask "年假有几天？"         # 提问
 python main.py eval                     # 跑评测集，输出命中率
 python main.py compare                  # 三种切分策略横向对比
+python main.py rerank                   # 重排前后效果对比
 ```
 
 启动接口服务：
