@@ -59,6 +59,9 @@ def build_index(strategy="heading", chunk_size=None, overlap=None, quiet=False):
 def cmd_ask(question, top_k):
     from rag import RAG
     r = RAG(top_k=top_k)
+    mode = (f"两阶段检索：向量宽召回(top_k×{config.RETRIEVE_MULTIPLIER}) + "
+            f"{r.reranker.model} 重排") if r.reranker.active else "单阶段：仅向量召回"
+    print(f"检索模式：{mode}")
     out = r.ask(question)
     print("=" * 70)
     print(f"问题：{out['question']}")
@@ -67,8 +70,15 @@ def cmd_ask(question, top_k):
     print("-" * 70)
     print("检索到的片段：")
     for i, h in enumerate(out["hits"], 1):
-        snippet = h["chunk"]["text"].replace("\n", " ")[:90]
-        print(f"  [{i}] 相似度 {h['score']:.3f}　{h['chunk']['source']}　{snippet}…")
+        snippet = h["chunk"]["text"].replace("\n", " ")[:72]
+        if "rerank_score" in h:
+            score = (f"重排分 {h['rerank_score']:.4f}"
+                     f"（向量分 {h.get('vector_score', 0):.3f}）")
+        else:
+            score = f"向量分 {h.get('score', 0):.3f}"
+        print(f"  [{i}] {score}")
+        print(f"       来源：{h['chunk']['source']}")
+        print(f"       内容：{snippet}…")
 
 
 def cmd_compare():
