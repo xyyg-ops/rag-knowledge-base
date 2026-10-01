@@ -7,6 +7,7 @@
     python main.py ask "年假有几天？"     # 提问
     python main.py compare               # 三种切分策略横向对比（写进简历的东西）
     python main.py eval                  # 跑评测集
+    python main.py rerank                # 对比 重排前 vs 重排后（写进简历的东西）
 """
 import argparse
 import shutil
@@ -72,11 +73,11 @@ def cmd_ask(question, top_k):
 
 def cmd_compare():
     """三种切分策略横向对比 —— 直接产出简历里的对比表"""
-    from evaluate import evaluate
+    from evaluate import run as eval_run
     rows = []
     for name in STRATEGIES:
         info = build_index(strategy=name, quiet=True)
-        res = evaluate()
+        res = eval_run()
         rows.append((name, info["chunks"], res["keyword_hit_rate"], res["source_hit_rate"]))
 
     print("\n" + "=" * 74)
@@ -108,6 +109,7 @@ def main():
 
     sub.add_parser("compare", help="三种切分策略对比")
     sub.add_parser("eval", help="跑评测集")
+    sub.add_parser("rerank", help="对比 重排前 vs 重排后")
 
     args = ap.parse_args()
     if args.cmd == "index":
@@ -117,8 +119,11 @@ def main():
     elif args.cmd == "compare":
         cmd_compare()
     elif args.cmd == "eval":
-        from evaluate import evaluate
-        evaluate()
+        from evaluate import run
+        run()
+    elif args.cmd == "rerank":
+        from evaluate import compare_rerank
+        compare_rerank()
 
 
 if __name__ == "__main__":

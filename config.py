@@ -38,3 +38,9 @@ LOCAL_EMBED_DIM = int(os.getenv("LOCAL_EMBED_DIM", "512"))
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "400"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "80"))
 TOP_K = int(os.getenv("TOP_K", "4"))
+
+# ---------- 重排（两阶段检索的第二阶段）----------
+RERANK_MODEL = os.getenv("RERANK_MODEL", "BAAI/bge-reranker-v2-m3")
+RERANK_ENABLED = os.getenv("RERANK_ENABLED", "1").lower() not in ("0", "false", "no")
+# 开启重排时，先按 top_k * 此倍数宽召回，再精排到 top_k
+RETRIEVE_MULTIPLIER = int(os.getenv("RETRIEVE_MULTIPLIER", "3"))

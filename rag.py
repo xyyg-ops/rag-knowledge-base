@@ -3,6 +3,7 @@
 import requests
 import config
 from embedder import Embedder
+from rerank import Reranker
 from store import VectorStore
 
 PROMPT = """你是企业知识库助手。请严格依据下面的【参考资料】回答用户问题。
@@ -25,11 +26,17 @@ class RAG:
     def __init__(self, top_k=None):
         self.embedder = Embedder()
         self.store = VectorStore.load()
+        self.reranker = Reranker()
         self.top_k = top_k or config.TOP_K
 
     def retrieve(self, question, top_k=None):
+        """两阶段检索：向量宽召回 → 交叉编码器精排。"""
+        k = top_k or self.top_k
         qv = self.embedder.encode(question)[0]
-        return self.store.search(qv, top_k=top_k or self.top_k)
+        if self.reranker.active:
+            hits = self.store.search(qv, top_k=k * config.RETRIEVE_MULTIPLIER)
+            return self.reranker.rerank(question, hits, top_n=k)
+        return self.store.search(qv, top_k=k)
 
     @staticmethod
     def build_context(hits):
@@ -38,6 +45,8 @@ class RAG:
             c = h["chunk"]
             section = (c.get("meta") or {}).get("section") or ""
             head = f"[{i}] 来源：{c['source']}" + (f" · {section}" if section else "")
+            score = h.get("rerank_score", h.get("score"))
+            head += f"（相关度 {score:.2f}）"
             parts.append(f"{head}\n{c['text']}")
         return "\n\n---\n\n".join(parts)
 
