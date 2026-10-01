@@ -1,0 +1,12 @@
+# 密钥，绝对不能提交
+.env
+
+# 生成物
+index/
+__pycache__/
+*.pyc
+api.log
+
+# 虚拟环境
+venv/
+.venv/
